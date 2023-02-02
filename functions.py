@@ -964,3 +964,54 @@ def cond_LU_Sim(df,seed=45, normal_out=False,col_in=False):
     else:
         return df_im    
         
+#######################################
+
+def nscore(df):
+    from scipy.stats import percentileofscore
+    from scipy.stats import norm    
+    
+    """
+    Quantile Transformation
+    """
+    colm_=list(df.columns)
+    rows=len(df)
+    #btr_tbl= np.zeros((rows,2))
+    btr_tbl= np.zeros((rows,2))
+    btr_tbl={}
+    ns_=np.zeros((rows))
+    df_na=df.to_numpy()
+    df_nna=df.dropna().to_numpy()
+    val_or=[]
+    val_=[]
+    for j in range(len(df_na)):
+        if np.isnan(df_na[j]):
+            val=np.nan
+        else:    
+            val=percentileofscore(df_nna, df_na[j])
+            if val==100: val=val-0.001
+            if val==0:   val=val+0.001
+        
+        val_or.append(df_na[j][0])
+        val_.append(val/100)
+        
+    btr_tbl[0]= val_or  
+    tmp_ns    = norm.ppf(val_) 
+    btr_tbl[1]= tmp_ns
+    ns_[:]    = tmp_ns 
+    return ns_, btr_tbl 
+
+#########################################
+
+def backtr(Gau_ditrsn, btr_tbl):
+    """
+    Backtransform Quantile Transformation
+    
+    Gau_ditrsn : Gaussian distribution
+    btr_tbl    : table for back transformation
+    """     
+    array = np.asarray(btr_tbl[1])
+    btr = []
+    for i in range(len(Gau_ditrsn)):
+            idx = (np.abs(array - Gau_ditrsn[i])).argmin()
+            btr.append(btr_tbl[0][idx])  
+    return  btr     
